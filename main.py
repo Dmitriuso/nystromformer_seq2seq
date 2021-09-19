@@ -52,8 +52,8 @@ ENC_LAYERS = 3
 DEC_LAYERS = 3
 ENC_HEADS = 8
 DEC_HEADS = 8
-ENC_PF_DIM = 512
-DEC_PF_DIM = 512
+ENC_PF_DIM = 2048
+DEC_PF_DIM = 2048
 ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
 
@@ -182,7 +182,7 @@ def epoch_time(start_time, end_time):
 
 
 def main():
-    N_EPOCHS = 50
+    N_EPOCHS = 15
     CLIP = 1
 
     best_valid_loss = float('inf')
