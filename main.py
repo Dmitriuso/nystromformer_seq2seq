@@ -100,7 +100,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 criterion = nn.CrossEntropyLoss(ignore_index=TRG_PAD_IDX)
 
 
-def train(model, iterator, optimizer, criterion, clip):
+def train(model, iterator, optimizer, criterion, clip, kbar):
 
     model.train()
 
@@ -136,10 +136,12 @@ def train(model, iterator, optimizer, criterion, clip):
 
         epoch_loss += loss.item()
 
+        kbar.update(i, values=[("loss", epoch_loss / float(i + 1))])
+
     return epoch_loss / len(iterator)
 
 
-def evaluate(model, iterator, criterion):
+def evaluate(model, iterator, criterion, kbar):
 
     model.eval()
 
@@ -169,6 +171,8 @@ def evaluate(model, iterator, criterion):
 
             epoch_loss += loss.item()
 
+            kbar.add(1, values=[("val_loss", epoch_loss / len(iterator))])
+
     return epoch_loss / len(iterator)
 
 
@@ -192,8 +196,8 @@ def main():
 
         kbar = pkbar.Kbar(target=len(train_iterator), epoch=epoch, num_epochs=N_EPOCHS, width=8, always_stateful=False)
 
-        train_loss = train(model, train_iterator, optimizer, criterion, CLIP)
-        valid_loss = evaluate(model, valid_iterator, criterion)
+        train_loss = train(model, train_iterator, optimizer, criterion, CLIP, kbar)
+        valid_loss = evaluate(model, valid_iterator, criterion, kbar)
 
         end_time = time.time()
 
