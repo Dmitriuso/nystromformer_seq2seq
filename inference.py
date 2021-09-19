@@ -12,6 +12,7 @@ from pathlib import Path
 from utils.pre_processing import SRC, TRG
 
 work_dir = Path(__file__).parent.resolve()
+models_dir = work_dir / "models"
 
 SEED = 1234
 
@@ -34,7 +35,7 @@ class TranslationInference:
         self.model.eval()
 
         if isinstance(sentence, str):
-            nlp = spacy.load('de_dep_news_trf')
+            nlp = spacy.load('de_core_news_sm')
             tokens = [token.text.lower() for token in nlp(sentence)]
         else:
             tokens = [token.lower() for token in sentence]
@@ -69,13 +70,13 @@ class TranslationInference:
 
         trg_tokens = [self.trg_field.vocab.itos[i] for i in trg_indexes]
 
-        return trg_tokens[1:], attention
+        return trg_tokens[1:]
 
 
 def translate():
     sentence = "I habe aber alles verstanden."
     max_len = 50
-    model_path = work_dir / "translate_fnet_de_en_trf.pt"
+    model_path = models_dir / "translate_svd_de_en.pt"
     src_field = SRC
     trg_field = TRG
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

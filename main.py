@@ -34,7 +34,7 @@ torch.cuda.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-output_model_path = models_dir / "translate_fnet_de_en_trf.pt"
+output_model_path = models_dir / "translate_svd_de_en.pt"
 
 BATCH_SIZE = 128
 
@@ -184,7 +184,7 @@ def epoch_time(start_time, end_time):
 
 
 def main():
-    N_EPOCHS = 50
+    N_EPOCHS = 10
     CLIP = 1
 
     best_valid_loss = float('inf')
