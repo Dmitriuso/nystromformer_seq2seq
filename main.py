@@ -182,7 +182,7 @@ def epoch_time(start_time, end_time):
 
 
 def main():
-    N_EPOCHS = 20
+    N_EPOCHS = 50
     CLIP = 1
 
     best_valid_loss = float('inf')
