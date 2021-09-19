@@ -233,7 +233,7 @@ def main():
         max_len=50,
         device=device
     )
-    dataset_translation, attention = translation.inference(src)
+    dataset_translation = translation.inference(src)
 
     print(f'\npredicted trg = {dataset_translation}')
     print(f'\narbitrary example: {sentence}')
