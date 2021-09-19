@@ -219,11 +219,14 @@ def main():
 
     example_idx = 5
 
-    src = vars(train_data.examples[example_idx])['src']
-    trg = vars(train_data.examples[example_idx])['trg']
+    train_src = vars(train_data.examples[example_idx])['src']
+    train_trg = vars(train_data.examples[example_idx])['trg']
 
-    print(f'\nsrc = {src}')
-    print(f'\ntrg = {trg}')
+    val_src = vars(valid_data.examples[example_idx])['src']
+    val_trg = vars(valid_data.examples[example_idx])['trg']
+
+    test_src = vars(test_data.examples[example_idx])['src']
+    test_trg = vars(test_data.examples[example_idx])['trg']
 
     sentence = "I habe aber alles verstanden."
     translation = TranslationInference(
@@ -233,11 +236,25 @@ def main():
         max_len=50,
         device=device
     )
-    dataset_translation = translation.inference(src)
 
-    print(f'\npredicted trg = {dataset_translation}')
-    print(f'\narbitrary example: {sentence}')
-    print(f'\nprediction: {translation.inference(sentence)}')
+    train_translation = translation.inference(train_src)
+    val_translation = translation.inference(val_src)
+    test_translation = translation.inference(test_src)
+
+    print(f'train src = {train_src}')
+    print(f'train trg = {train_trg}')
+    print(f'predicted train trg = {train_translation}')
+
+    print(f'val src = {val_src}')
+    print(f'val trg = {val_trg}')
+    print(f'predicted val trg = {val_translation}')
+
+    print(f'test src = {test_src}')
+    print(f'test trg = {test_trg}')
+    print(f'predicted test trg = {test_translation}')
+
+    print(f'arbitrary example: {sentence}')
+    print(f'prediction: {translation.inference(sentence)}')
 
 
 if __name__ == '__main__':
