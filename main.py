@@ -141,7 +141,7 @@ def train(model, iterator, optimizer, criterion, clip, kbar):
     return epoch_loss / len(iterator)
 
 
-def evaluate(model, iterator, criterion, kbar):
+def evaluate(model, iterator, criterion):
 
     model.eval()
 
@@ -170,8 +170,6 @@ def evaluate(model, iterator, criterion, kbar):
             loss = criterion(output, trg)
 
             epoch_loss += loss.item()
-
-            kbar.add(1, values=[("val_loss", epoch_loss / len(iterator))])
 
     return epoch_loss / len(iterator)
 
@@ -215,21 +213,26 @@ def main():
         writer.add_scalar("Val. Loss", valid_loss, epoch+1)
         writer.add_scalar("Val. PPL", math.exp(valid_loss), epoch+1)
 
-        model_eval_path = output_model_path
-        model_eval = torch.load(model_eval_path)
-        test_loss = evaluate(model_eval, valid_iterator, criterion, kbar)
-        print(f'| Test Loss: {test_loss:.3f} | Test PPL: {math.exp(test_loss):7.3f} |')
 
-        sentence = "I habe aber alles verstanden."
-        translation = TranslationInference(
-            model_path=model_eval_path,
-            src_field=SRC,
-            trg_field=TRG,
-            max_len=50,
-            device=device
-        )
-        print(f'prediction : {translation.inference(sentence)}')
+def main_eval():
+    model_eval = torch.load(output_model_path)
+    test_loss = evaluate(model_eval, valid_iterator, criterion)
+    print(f'| Test Loss: {test_loss:.3f} | Test PPL: {math.exp(test_loss):7.3f} |')
+
+
+def main_test():
+    sentence = "I habe aber alles verstanden."
+    translation = TranslationInference(
+        model_path=output_model_path,
+        src_field=SRC,
+        trg_field=TRG,
+        max_len=50,
+        device=device
+    )
+    print(f'prediction : {translation.inference(sentence)}')
 
 
 if __name__ == '__main__':
+    main()
+    main_eval()
     main()
