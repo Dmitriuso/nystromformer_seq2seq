@@ -182,7 +182,7 @@ def epoch_time(start_time, end_time):
 
 
 def main():
-    N_EPOCHS = 30
+    N_EPOCHS = 20
     CLIP = 1
 
     best_valid_loss = float('inf')
@@ -217,6 +217,14 @@ def main():
     test_loss = evaluate(model_eval, valid_iterator, criterion)
     print(f'\n\t| Test Loss: {test_loss:.3f} | Test PPL: {math.exp(test_loss):7.3f} |')
 
+    example_idx = 5
+
+    src = vars(train_data.examples[example_idx])['src']
+    trg = vars(train_data.examples[example_idx])['trg']
+
+    print(f'\nsrc = {src}')
+    print(f'\ntrg = {trg}')
+
     sentence = "I habe aber alles verstanden."
     translation = TranslationInference(
         model_path=output_model_path,
@@ -225,7 +233,11 @@ def main():
         max_len=50,
         device=device
     )
-    print(f'\nprediction : {translation.inference(sentence)}')
+    dataset_translation, attention = translation.inference(src)
+
+    print(f'\npredicted trg = {dataset_translation}')
+    print(f'\narbitrary example: {sentence}')
+    print(f'\nprediction: {translation.inference(sentence)}')
 
 
 if __name__ == '__main__':
