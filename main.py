@@ -182,7 +182,7 @@ def epoch_time(start_time, end_time):
 
 
 def main():
-    N_EPOCHS = 10
+    N_EPOCHS = 30
     CLIP = 1
 
     best_valid_loss = float('inf')
@@ -205,7 +205,7 @@ def main():
             best_valid_loss = valid_loss
             torch.save(model, output_model_path)
 
-        print(f'Epoch: {epoch + 1:02} | Time: {epoch_mins}m {epoch_secs}s')
+        print(f'\n\tEpoch: {epoch + 1:02} | Time: {epoch_mins}m {epoch_secs}s')
         print(f'\tTrain Loss: {train_loss:.3f} | Train PPL: {math.exp(train_loss):7.3f}')
         print(f'\t Val. Loss: {valid_loss:.3f} |  Val. PPL: {math.exp(valid_loss):7.3f}')
         writer.add_scalar("Train Loss", train_loss, epoch+1)
@@ -213,14 +213,10 @@ def main():
         writer.add_scalar("Val. Loss", valid_loss, epoch+1)
         writer.add_scalar("Val. PPL", math.exp(valid_loss), epoch+1)
 
-
-def main_eval():
     model_eval = torch.load(output_model_path)
     test_loss = evaluate(model_eval, valid_iterator, criterion)
-    print(f'| Test Loss: {test_loss:.3f} | Test PPL: {math.exp(test_loss):7.3f} |')
+    print(f'\n\t| Test Loss: {test_loss:.3f} | Test PPL: {math.exp(test_loss):7.3f} |')
 
-
-def main_test():
     sentence = "I habe aber alles verstanden."
     translation = TranslationInference(
         model_path=output_model_path,
@@ -229,10 +225,8 @@ def main_test():
         max_len=50,
         device=device
     )
-    print(f'prediction : {translation.inference(sentence)}')
+    print(f'\nprediction : {translation.inference(sentence)}')
 
 
 if __name__ == '__main__':
-    main()
-    main_eval()
     main()
