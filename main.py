@@ -192,8 +192,8 @@ def main():
 
         kbar = pkbar.Kbar(target=len(train_iterator), epoch=epoch, num_epochs=N_EPOCHS, width=8, always_stateful=False)
 
-        train_loss = train(model, train_iterator, optimizer, criterion, CLIP, kbar)
-        valid_loss = evaluate(model, valid_iterator, criterion, kbar)
+        train_loss = train(model, train_iterator, optimizer, criterion, CLIP)
+        valid_loss = evaluate(model, valid_iterator, criterion)
 
         end_time = time.time()
 
