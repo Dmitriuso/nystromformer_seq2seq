@@ -12,6 +12,7 @@ import numpy as np
 import random
 import math
 import time
+import pkbar
 
 from encoder import Encoder
 from decoder import Decoder
@@ -179,7 +180,7 @@ def epoch_time(start_time, end_time):
 
 
 def main():
-    N_EPOCHS = 30
+    N_EPOCHS = 50
     CLIP = 1
 
     best_valid_loss = float('inf')
@@ -189,8 +190,10 @@ def main():
 
         start_time = time.time()
 
-        train_loss = train(model, train_iterator, optimizer, criterion, CLIP)
-        valid_loss = evaluate(model, valid_iterator, criterion)
+        kbar = pkbar.Kbar(target=len(train_iterator), epoch=epoch, num_epochs=N_EPOCHS, width=8, always_stateful=False)
+
+        train_loss = train(model, train_iterator, optimizer, criterion, CLIP, kbar)
+        valid_loss = evaluate(model, valid_iterator, criterion, kbar)
 
         end_time = time.time()
 
@@ -198,20 +201,19 @@ def main():
 
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
-            torch.save(model.state_dict(), output_model_path)
+            torch.save(model, output_model_path)
 
-        print(f'Epoch: {epoch+1:02} | Time: {epoch_mins}m {epoch_secs}s')
+        print(f'Epoch: {epoch + 1:02} | Time: {epoch_mins}m {epoch_secs}s')
         print(f'\tTrain Loss: {train_loss:.3f} | Train PPL: {math.exp(train_loss):7.3f}')
         print(f'\t Val. Loss: {valid_loss:.3f} |  Val. PPL: {math.exp(valid_loss):7.3f}')
-
         writer.add_scalar("Train Loss", train_loss, epoch+1)
         writer.add_scalar("Train PPL", math.exp(train_loss), epoch+1)
         writer.add_scalar("Val. Loss", valid_loss, epoch+1)
         writer.add_scalar("Val. PPL", math.exp(valid_loss), epoch+1)
 
         model_eval_path = output_model_path
-        model.load_state_dict(torch.load(model_eval_path))
-        test_loss = evaluate(model, test_iterator, criterion)
+        model_eval = torch.load(model_eval_path)
+        test_loss = evaluate(model_eval, valid_iterator, criterion, kbar)
         print(f'| Test Loss: {test_loss:.3f} | Test PPL: {math.exp(test_loss):7.3f} |')
 
         sentence = "I habe aber alles verstanden."
