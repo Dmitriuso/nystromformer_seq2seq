@@ -4,5 +4,6 @@ torch
 torchtext
 transformers
 tensorboard
+geotorch
 matplotlib
 spacy==3.0
