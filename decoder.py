@@ -7,8 +7,10 @@ class Decoder(nn.Module):
     def __init__(self,
                  output_dim,
                  hid_dim,
+                 head_dim,
                  n_layers,
                  n_heads,
+                 n_landmarks,
                  pf_dim,
                  dropout,
                  device,
@@ -20,11 +22,12 @@ class Decoder(nn.Module):
         self.tok_embedding = nn.Embedding(output_dim, hid_dim)
         self.pos_embedding = nn.Embedding(max_length, hid_dim)
 
-        self.layers = nn.ModuleList([DecoderLayer(hid_dim,
-                                                  n_heads,
-                                                  pf_dim,
-                                                  dropout,
-                                                  device)
+        self.layers = nn.ModuleList([DecoderLayer(hid_dim=hid_dim,
+                                                  head_dim=head_dim,
+                                                  n_heads=n_heads,
+                                                  n_landmarks=n_landmarks,
+                                                  pf_dim=pf_dim,
+                                                  dropout=dropout)
                                      for _ in range(n_layers)])
 
         self.fc_out = nn.Linear(hid_dim, output_dim)
@@ -52,13 +55,13 @@ class Decoder(nn.Module):
         #trg = [batch size, trg len, hid dim]
 
         for layer in self.layers:
-            trg, attention = layer(trg, enc_src, trg_mask, src_mask)
+            pre_output = layer(trg, enc_src, trg_mask, src_mask)
 
         #trg = [batch size, trg len, hid dim]
         #attention = [batch size, n heads, trg len, src len]
 
-        output = self.fc_out(trg)
+        output = self.fc_out(pre_output)
 
         #output = [batch size, trg len, output dim]
 
-        return output, attention
+        return output

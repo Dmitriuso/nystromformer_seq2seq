@@ -13,6 +13,7 @@ import random
 import math
 import time
 import pkbar
+import wandb
 
 from encoder import Encoder
 from decoder import Decoder
@@ -47,31 +48,37 @@ train_iterator, valid_iterator, test_iterator = BucketIterator.splits(
 
 INPUT_DIM = len(SRC.vocab)
 OUTPUT_DIM = len(TRG.vocab)
-HID_DIM = 256
+HID_DIM = 128
+HEAD_DIM = 16
 ENC_LAYERS = 3
 DEC_LAYERS = 3
-ENC_HEADS = 8
-DEC_HEADS = 8
-ENC_PF_DIM = 2048
-DEC_PF_DIM = 2048
+ENC_HEADS = 4
+DEC_HEADS = 4
+N_LANDMARKS = 64
+ENC_PF_DIM = 256
+DEC_PF_DIM = 256
 ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
 
-enc = Encoder(INPUT_DIM,
-              HID_DIM,
-              ENC_LAYERS,
-              ENC_HEADS,
-              ENC_PF_DIM,
-              ENC_DROPOUT,
-              device)
+enc = Encoder(input_dim=INPUT_DIM,
+              hid_dim=HID_DIM,
+              head_dim=HEAD_DIM,
+              n_layers=ENC_LAYERS,
+              n_heads=ENC_HEADS,
+              n_landmarks=N_LANDMARKS,
+              pf_dim=ENC_PF_DIM,
+              dropout=ENC_DROPOUT,
+              device=device)
 
-dec = Decoder(OUTPUT_DIM,
-              HID_DIM,
-              DEC_LAYERS,
-              DEC_HEADS,
-              DEC_PF_DIM,
-              DEC_DROPOUT,
-              device)
+dec = Decoder(output_dim=OUTPUT_DIM,
+              hid_dim=HID_DIM,
+              head_dim=HEAD_DIM,
+              n_layers=DEC_LAYERS,
+              n_heads=DEC_HEADS,
+              n_landmarks=N_LANDMARKS,
+              pf_dim=DEC_PF_DIM,
+              dropout=DEC_DROPOUT,
+              device=device)
 
 SRC_PAD_IDX = SRC.vocab.stoi[SRC.pad_token]
 TRG_PAD_IDX = TRG.vocab.stoi[TRG.pad_token]
@@ -101,32 +108,34 @@ criterion = nn.CrossEntropyLoss(ignore_index=TRG_PAD_IDX)
 
 
 def train(model, iterator, optimizer, criterion, clip, kbar):
-
     model.train()
 
     epoch_loss = 0
 
     for i, batch in enumerate(iterator):
-
         src = batch.src
         trg = batch.trg
 
         optimizer.zero_grad()
 
-        output, _ = model(src, trg[:,:-1])
+        output = model(src, trg[:, :-1])
 
-        #output = [batch size, trg len - 1, output dim]
-        #trg = [batch size, trg len]
+        # output = [batch size, trg len - 1, output dim]
+        # trg = [batch size, trg len]
 
         output_dim = output.shape[-1]
 
         output = output.contiguous().view(-1, output_dim)
-        trg = trg[:,1:].contiguous().view(-1)
+        trg = trg[:, 1:].contiguous().view(-1)
+        # print('-' * 50)
+        # print(f'trg : {trg.shape}')
+        # print(f'output : {output.shape}')
+        # output = [batch size * trg len - 1, output dim]
+        # trg = [batch size * trg len - 1]
+        max_len = max([trg.shape[0], output.shape[0]])
 
-        #output = [batch size * trg len - 1, output dim]
-        #trg = [batch size * trg len - 1]
-
-        loss = criterion(output, trg)
+        loss = criterion(nn.functional.pad(output, (0, max_len - output.shape[0])),
+                         nn.functional.pad(trg, (0, max_len - trg.shape[0])))
 
         loss.backward()
 
@@ -142,32 +151,31 @@ def train(model, iterator, optimizer, criterion, clip, kbar):
 
 
 def evaluate(model, iterator, criterion):
-
     model.eval()
 
     epoch_loss = 0
 
     with torch.no_grad():
-
         for i, batch in enumerate(iterator):
-
             src = batch.src
             trg = batch.trg
 
-            output, _ = model(src, trg[:,:-1])
+            output = model(src, trg[:, :-1])
 
-            #output = [batch size, trg len - 1, output dim]
-            #trg = [batch size, trg len]
+            # output = [batch size, trg len - 1, output dim]
+            # trg = [batch size, trg len]
 
             output_dim = output.shape[-1]
 
             output = output.contiguous().view(-1, output_dim)
-            trg = trg[:,1:].contiguous().view(-1)
+            trg = trg[:, 1:].contiguous().view(-1)
 
-            #output = [batch size * trg len - 1, output dim]
-            #trg = [batch size * trg len - 1]
+            # output = [batch size * trg len - 1, output dim]
+            # trg = [batch size * trg len - 1]
+            max_len = max([trg.shape[0], output.shape[0]])
 
-            loss = criterion(output, trg)
+            loss = criterion(nn.functional.pad(output, (0, max_len - output.shape[0])),
+                             nn.functional.pad(trg, (0, max_len - trg.shape[0])))
 
             epoch_loss += loss.item()
 
@@ -182,7 +190,7 @@ def epoch_time(start_time, end_time):
 
 
 def main():
-    N_EPOCHS = 15
+    N_EPOCHS = 10
     CLIP = 1
 
     best_valid_loss = float('inf')
@@ -258,4 +266,5 @@ def main():
 
 
 if __name__ == '__main__':
+    wandb.init(project="Transformer with Nyström-approximated attention")
     main()

@@ -21,7 +21,7 @@ class Seq2Seq(nn.Module):
 
         #src = [batch size, src len]
 
-        src_mask = (src != self.src_pad_idx).unsqueeze(1).unsqueeze(2)
+        src_mask = (src != self.src_pad_idx)
 
         #src_mask = [batch size, 1, 1, src len]
         # print(f'size of src_mask: {src_mask.shape}')
@@ -32,22 +32,23 @@ class Seq2Seq(nn.Module):
 
         #trg = [batch size, trg len]
 
-        trg_pad_mask = (trg != self.trg_pad_idx).unsqueeze(1).unsqueeze(2)
+        # trg_pad_mask = (trg != self.trg_pad_idx)
 
-        #trg_pad_mask = [batch size, 1, 1, trg len]
+        #trg_pad_mask = [batch size, trg len]
 
+        batch_size = trg.shape[0]
         trg_len = trg.shape[1]
 
-        trg_sub_mask = torch.tril(torch.ones((trg_len, trg_len), device = self.device)).bool()
+        trg_sub_mask = torch.tril(torch.ones((batch_size, trg_len), device = self.device)).bool()
 
-        #trg_sub_mask = [trg len, trg len]
+        #trg_sub_mask = [batch size, trg len]
 
-        trg_mask = trg_pad_mask & trg_sub_mask
+        # trg_mask = trg_pad_mask & trg_sub_mask
 
         #trg_mask = [batch size, 1, trg len, trg len]
         # print(f'size of trg mask: {trg_mask.shape}')
 
-        return trg_mask
+        return trg_sub_mask
 
     def forward(self, src, trg):
 
@@ -68,9 +69,9 @@ class Seq2Seq(nn.Module):
         #enc_src = [batch size, src len, hid dim]
         # print(f'enc_src : {enc_src.shape}')
 
-        output, attention = self.decoder(trg, enc_src, trg_mask, src_mask)
+        output = self.decoder(trg, enc_src, trg_mask, src_mask)
 
         #output = [batch size, trg len, output dim]
         #attention = [batch size, n heads, trg len, src len]
 
-        return output, attention
+        return output

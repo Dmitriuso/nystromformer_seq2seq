@@ -7,8 +7,10 @@ class Encoder(nn.Module):
     def __init__(self,
                  input_dim,
                  hid_dim,
+                 head_dim,
                  n_layers,
                  n_heads,
+                 n_landmarks,
                  pf_dim,
                  dropout,
                  device,
@@ -20,11 +22,12 @@ class Encoder(nn.Module):
         self.tok_embedding = nn.Embedding(input_dim, hid_dim)
         self.pos_embedding = nn.Embedding(max_length, hid_dim)
 
-        self.layers = nn.ModuleList([EncoderLayer(hid_dim,
-                                                  n_heads,
-                                                  pf_dim,
-                                                  dropout,
-                                                  device)
+        self.layers = nn.ModuleList([EncoderLayer(hid_dim=hid_dim,
+                                                  head_dim=head_dim,
+                                                  n_heads=n_heads,
+                                                  n_landmarks=n_landmarks,
+                                                  pf_dim=pf_dim,
+                                                  dropout=dropout)
                                      for _ in range(n_layers)])
 
         self.dropout = nn.Dropout(dropout)

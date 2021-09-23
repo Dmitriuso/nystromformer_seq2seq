@@ -59,7 +59,7 @@ class TranslationInference:
             trg_mask = self.model.make_trg_mask(trg_tensor)
 
             with torch.no_grad():
-                output, attention = self.model.decoder(trg_tensor, enc_src, trg_mask, src_mask)
+                output = self.model.decoder(trg_tensor, enc_src, trg_mask, src_mask)
 
             pred_token = output.argmax(2)[:,-1].item()
 
